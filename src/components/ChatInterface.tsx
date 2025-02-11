@@ -1,7 +1,6 @@
 "use client"
 
-import  React from "react"
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import "./ChatInterface.css"
 
 interface Message {
@@ -19,27 +18,45 @@ function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(scrollToBottom, []) // Updated dependency array
+  useEffect(scrollToBottom, [messages.length]) // Scroll when messages update
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
-
+  
+    // Add user's message to chat
     const userMessage: Message = { id: Date.now(), text: input, sender: "user" }
     setMessages((prevMessages) => [...prevMessages, userMessage])
     setInput("")
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = { id: Date.now(), text: mockAIResponse(input), sender: "ai" }
+  
+    try {
+      const response = await fetch("https://medbot-7.onrender.com/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: input }),
+      })
+  
+      if (!response.ok) throw new Error("Failed to fetch response")
+  
+      const data = await response.json()
+  
+      // 🛠️ Extract text response properly from "data.answer.result"
+      const aiMessage: Message = { 
+        id: Date.now(), 
+        text: data?.answer?.result || "No response received.", 
+        sender: "ai" 
+      }
+  
       setMessages((prevMessages) => [...prevMessages, aiMessage])
-    }, 1000)
+    } catch (error) {
+      console.error("Error fetching AI response:", error)
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { id: Date.now(), text: "Error: Unable to fetch response.", sender: "ai" },
+      ])
+    }
   }
-
-  const mockAIResponse = (query: string) => {
-    // This is a mock function. In a real application, you would call your AI service here.
-    return `Here's a medical response to "${query}". Please note that this is a simulated response and should not be considered as professional medical advice.`
-  }
+  
 
   return (
     <div className="chat-interface">
@@ -68,4 +85,3 @@ function ChatInterface() {
 }
 
 export default ChatInterface
-
