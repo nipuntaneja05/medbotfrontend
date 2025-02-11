@@ -13,7 +13,7 @@ function App() {
         <ChatInterface />
       </main>
       <footer>
-        <p>© 2023 MediGyaan AI. All rights reserved.</p>
+        <p>© 2025 MediGyaan AI. All rights reserved.</p>
       </footer>
     </div>
   );
